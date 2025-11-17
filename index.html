@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComicVerse Hub - Your Ultimate Comic Book Store</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Bangers&family=Roboto:wght@300;400;500;700&family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-black: #0a0a0a;
+            --secondary-red: #dc2626;
+            --tertiary-blue: #3b82f6;
+            --warm-gold: #f59e0b;
+            --dark-gray: #1f2937;
+            --light-gray: #6b7280;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--primary-black);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .font-creepster {
+            font-family: 'Creepster', cursive;
+        }
+
+        .font-bangers {
+            font-family: 'Bangers', cursive;
+        }
+
+        .font-comic {
+            font-family: 'Comic Neue', cursive;
+        }
+
+        /* Hero Carousel Styles */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            height: 70vh;
+            overflow: hidden;
+        }
+
+        .slides {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .slide {
+            position: relative;
+            min-width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slide-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.8) 100%);
+        }
+
+        .slide-content {
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            transform: translateY(-50%);
+            max-width: 600px;
+            z-index: 10;
+        }
+
+        .carousel-controls {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2rem;
+            transform: translateY(-50%);
+            z-index: 20;
+        }
+
+        .control-btn {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: var(--secondary-red);
+            transform: scale(1.1);
+        }
+
+        .carousel-indicators {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 20;
+        }
+
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .indicator.active {
+            background: var(--secondary-red);
+            transform: scale(1.2);
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--secondary-red);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary-red);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Search Bar Styles */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: white;
+            transition: all 0.3s ease;
+            width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--secondary-red);
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+            width: 300px;
+        }
+
+        .search-input::placeholder {
+            color: var(--light-gray);
+        }
+
+        /* Cart Icon Styles */
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cart-icon:hover {
+            color: var(--secondary-red);
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--secondary-red);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Comic Card Styles */
+        .comic-card {
+            background: var(--dark-gray);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(220, 38, 38, 0.1);
+        }
+
+        .comic-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(220, 38, 38, 0.2);
+            border-color: var(--secondary-red);
+        }
+
+        .comic-card img {
+            transition: transform 0.3s ease;
+        }
+
+        .comic-card:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Publisher Section Styles */
+        .publisher-section {
+            background: linear-gradient(135deg, var(--dark-gray) 0%, rgba(31, 41, 55, 0.8) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .publisher-section:hover {
+            border-color: var(--secondary-red);
+            box-shadow: 0 10px 30px rgba(220, 38, 38, 0.1);
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-red) 0%, #b91c1c 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--secondary-red);
+            color: var(--secondary-red);
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-red);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Background Effects */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image: 
+                radial-gradient(circle at 25% 25%, var(--secondary-red) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, var(--tertiary-blue) 2px, transparent 2px);
+            background-size: 50px 50px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .carousel-container {
+                height: 50vh;
+            }
+            
+            .slide-content {
+                left: 5%;
+                right: 5%;
+                text-align: center;
+            }
+            
+            .slide-content h2 {
+                font-size: 2rem;
+            }
+            
+            .search-input {
+                width: 200px;
+            }
+            
+            .search-input:focus {
+                width: 250px;
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from {
+                box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+            }
+            to {
+                box-shadow: 0 0 40px rgba(220, 38, 38, 0.6);
+            }
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            border: 3px solid rgba(220, 38, 38, 0.3);
+            border-top: 3px solid var(--secondary-red);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Pattern -->
+    <div class="bg-pattern"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center space-x-4">
+                    <h1 class="font-creepster text-3xl text-red-500">ComicVerse</h1>
+                    <span class="font-comic text-sm text-gray-400">HUB</span>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link font-semibold">Home</a>
+                    <a href="browse.html" class="nav-link font-semibold">Browse Comics</a>
+                    <a href="cart.html" class="nav-link font-semibold">Cart</a>
+                </div>
+
+                <!-- Search and Cart -->
+                <div class="flex items-center space-x-4">
+                    <div class="search-container">
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            placeholder="Search comics..." 
+                            class="search-input"
+                            onkeypress="if(event.key==='Enter'){window.location.href='browse.html?search='+this.value}"
+                        >
+                    </div>
+                    <a href="cart.html" class="cart-icon text-white text-2xl relative">
+                        🛒
+                        <span id="cart-count" class="cart-count" style="display: none;">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Carousel -->
+    <section id="hero-carousel" class="mt-20">
+        <!-- Carousel will be dynamically generated by JavaScript -->
+    </section>
+
+    <!-- Featured Comics Section -->
+    <section class="py-16 px-4">
+        <div class="container mx-auto">
+            <div class="text-center mb-12 animate-on-scroll">
+                <h2 class="font-bangers text-5xl text-white mb-4">🔥 Featured Comics 🔥</h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Discover the hottest comics from Marvel, DC, and independent publishers. Your next favorite story awaits!</p>
+            </div>
+
+            <div id="featured-comics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 animate-on-scroll">
+                <!-- Featured comics will be dynamically loaded -->
+            </div>
+
+            <div class="text-center mt-12">
+                <a href="browse.html" class="btn-primary inline-block">
+                    Browse All Comics
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- New Releases Section -->
+    <section class="py-16 px-4 bg-gray-900">
+        <div class="container mx-auto">
+            <div class="text-center mb-12 animate-on-scroll">
+                <h2 class="font-bangers text-5xl text-white mb-4">✨ New Releases ✨</h2>
+                <p class="text-gray-400 text-lg">Fresh off the press! The latest comics hitting the shelves.</p>
+            </div>
+
+            <div id="new-releases" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 animate-on-scroll">
+                <!-- New releases will be dynamically loaded -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Publisher Spotlights -->
+    <section class="py-16 px-4">
+        <div class="container mx-auto">
+            <div class="text-center mb-12 animate-on-scroll">
+                <h2 class="font-bangers text-5xl text-white mb-4">🏢 Publisher Spotlights 🏢</h2>
+                <p class="text-gray-400 text-lg">Explore comics from the biggest publishers in the industry.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-on-scroll">
+                <!-- Marvel -->
+                <div class="publisher-section p-8 text-center group cursor-pointer" onclick="window.location.href='browse.html?publisher=Marvel'">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">🕷️</div>
+                    <h3 class="font-bangers text-3xl text-white mb-4">Marvel Comics</h3>
+                    <p class="text-gray-400 mb-6">Home to Spider-Man, Avengers, X-Men, and more legendary heroes. Experience the Marvel Universe!</p>
+                    <div class="btn-secondary">Explore Marvel</div>
+                </div>
+
+                <!-- DC Comics -->
+                <div class="publisher-section p-8 text-center group cursor-pointer" onclick="window.location.href='browse.html?publisher=DC'">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">🦇</div>
+                    <h3 class="font-bangers text-3xl text-white mb-4">DC Comics</h3>
+                    <p class="text-gray-400 mb-6">The world of Batman, Superman, Wonder Woman, and the Justice League awaits your discovery.</p>
+                    <div class="btn-secondary">Explore DC</div>
+                </div>
+
+                <!-- Image Comics -->
+                <div class="publisher-section p-8 text-center group cursor-pointer" onclick="window.location.href='browse.html?publisher=Image'">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">🎨</div>
+                    <h3 class="font-bangers text-3xl text-white mb-4">Image Comics</h3>
+                    <p class="text-gray-400 mb-6">Creator-owned comics with bold storytelling. From Saga to The Walking Dead, find your next obsession.</p>
+                    <div class="btn-secondary">Explore Image</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Genre Explorer -->
+    <section class="py-16 px-4 bg-gray-900">
+        <div class="container mx-auto">
+            <div class="text-center mb-12 animate-on-scroll">
+                <h2 class="font-bangers text-5xl text-white mb-4">🎭 Explore by Genre 🎭</h2>
+                <p class="text-gray-400 text-lg">Find comics that match your taste across all genres.</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-on-scroll">
+                <div class="genre-tag bg-gray-800 hover:bg-red-600 p-4 rounded-lg text-center cursor-pointer transition-all duration-300" onclick="window.location.href='browse.html?genre=Superhero'">
+                    <div class="text-3xl mb-2">💥</div>
+                    <div class="font-semibold">Superhero</div>
+                </div>
+                <div class="genre-tag bg-gray-800 hover:bg-red-600 p-4 rounded-lg text-center cursor-pointer transition-all duration-300" onclick="window.location.href='browse.html?genre=Horror'">
+                    <div class="text-3xl mb-2">👻</div>
+                    <div class="font-semibold">Horror</div>
+                </div>
+                <div class="genre-tag bg-gray-800 hover:bg-red-600 p-4 rounded-lg text-center cursor-pointer transition-all duration-300" onclick="window.location.href='browse.html?genre=Sci-Fi'">
+                    <div class="text-3xl mb-2">🚀</div>
+                    <div class="font-semibold">Sci-Fi</div>
+                </div>
+                <div class="genre-tag bg-gray-800 hover:bg-red-600 p-4 rounded-lg text-center cursor-pointer transition-all duration-300" onclick="window.location.href='browse.html?genre=Fantasy'">
+                    <div class="text-3xl mb-2">🧙</div>
+                    <div class="font-semibold">Fantasy</div>
+                </div>
+                <div class="genre-tag bg-gray-800 hover:bg-red-600 p-4 rounded-lg text-center cursor-pointer transition-all duration-300" onclick="window.location.href='browse.html?genre=Mystery'">
+                    <div class="text-3xl mb-2">🔍</div>
+                    <div class="font-semibold">Mystery</div>
+                </div>
+                <div class="genre-tag bg-gray-800 hover:bg-red-600 p-4 rounded-lg text-center cursor-pointer transition-all duration-300" onclick="window.location.href='browse.html?genre=Action'">
+                    <div class="text-3xl mb-2">⚔️</div>
+                    <div class="font-semibold">Action</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="py-16 px-4">
+        <div class="container mx-auto max-w-4xl text-center animate-on-scroll">
+            <h2 class="font-bangers text-4xl text-white mb-4">📧 Stay Updated 📧</h2>
+            <p class="text-gray-400 text-lg mb-8">Get the latest comic releases, exclusive deals, and comic news delivered to your inbox!</p>
+            
+            <div class="flex flex-col md:flex-row gap-4 justify-center items-center max-w-md mx-auto">
+                <input 
+                    type="email" 
+                    placeholder="Enter your email" 
+                    class="bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white w-full focus:outline-none focus:border-red-500"
+                >
+                <button class="btn-primary whitespace-nowrap">
+                    Subscribe Now
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-12 px-4 border-t border-gray-800">
+        <div class="container mx-auto text-center">
+            <div class="mb-8">
+                <h3 class="font-creepster text-3xl text-red-500 mb-4">ComicVerse Hub</h3>
+                <p class="text-gray-400 max-w-2xl mx-auto">
+                    Your ultimate destination for comic books, graphic novels, and everything in between. 
+                    Discover stories that inspire, entertain, and transport you to new worlds.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h4 class="font-bangers text-xl text-white mb-4">Quick Links</h4>
+                    <div class="space-y-2">
+                        <a href="browse.html" class="block text-gray-400 hover:text-red-500 transition-colors">Browse Comics</a>
+                        <a href="cart.html" class="block text-gray-400 hover:text-red-500 transition-colors">Shopping Cart</a>
+                        <a href="#" class="block text-gray-400 hover:text-red-500 transition-colors">New Releases</a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-bangers text-xl text-white mb-4">Publishers</h4>
+                    <div class="space-y-2">
+                        <a href="browse.html?publisher=Marvel" class="block text-gray-400 hover:text-red-500 transition-colors">Marvel Comics</a>
+                        <a href="browse.html?publisher=DC" class="block text-gray-400 hover:text-red-500 transition-colors">DC Comics</a>
+                        <a href="browse.html?publisher=Image" class="block text-gray-400 hover:text-red-500 transition-colors">Image Comics</a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-bangers text-xl text-white mb-4">Genres</h4>
+                    <div class="space-y-2">
+                        <a href="browse.html?genre=Superhero" class="block text-gray-400 hover:text-red-500 transition-colors">Superhero</a>
+                        <a href="browse.html?genre=Horror" class="block text-gray-400 hover:text-red-500 transition-colors">Horror</a>
+                        <a href="browse.html?genre=Sci-Fi" class="block text-gray-400 hover:text-red-500 transition-colors">Sci-Fi</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <p class="text-gray-500">
+                    © 2024 ComicVerse Hub. All rights reserved. This is a demo website for educational purposes.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Main JavaScript -->
+    <script src="main.js"></script>
+    
+    <!-- Additional Homepage Scripts -->
+    <script>
+        // Load featured and new release comics
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load featured comics
+            const featuredComics = comics.filter(comic => comic.popular).slice(0, 4);
+            const featuredContainer = document.getElementById('featured-comics');
+            
+            if (featuredContainer) {
+                featuredContainer.innerHTML = featuredComics.map(comic => `
+                    <div class="comic-card group cursor-pointer transform transition-all duration-300 hover:scale-105" onclick="window.location.href='comic-detail.html?id=${comic.id}'">
+                        <div class="relative overflow-hidden rounded-lg">
+                            <img src="${comic.cover}" alt="${comic.title}" class="w-full h-auto object-cover">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex items-center justify-center">
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-center">
+                                    <button onclick="event.stopPropagation(); addToCart('${comic.id}')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg mb-2 font-semibold">
+                                        Add to Cart
+                                    </button>
+                                    <div class="text-white text-sm">$${comic.price}</div>
+                                </div>
+                            </div>
+                            ${comic.newRelease ? '<div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">NEW</div>' : ''}
+                            ${comic.popular ? '<div class="absolute top-2 right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">POPULAR</div>' : ''}
+                        </div>
+                        <div class="mt-4 p-4">
+                            <h3 class="font-bold text-white text-lg mb-2 truncate">${comic.title}</h3>
+                            <p class="text-gray-400 text-sm mb-2">${comic.publisher} • ${comic.genre}</p>
+                            <p class="text-red-400 font-bold text-xl">$${comic.price}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Load new releases
+            const newReleases = comics.filter(comic => comic.newRelease).slice(0, 4);
+            const newReleasesContainer = document.getElementById('new-releases');
+            
+            if (newReleasesContainer) {
+                newReleasesContainer.innerHTML = newReleases.map(comic => `
+                    <div class="comic-card group cursor-pointer transform transition-all duration-300 hover:scale-105" onclick="window.location.href='comic-detail.html?id=${comic.id}'">
+                        <div class="relative overflow-hidden rounded-lg">
+                            <img src="${comic.cover}" alt="${comic.title}" class="w-full h-auto object-cover">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex items-center justify-center">
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-center">
+                                    <button onclick="event.stopPropagation(); addToCart('${comic.id}')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg mb-2 font-semibold">
+                                        Add to Cart
+                                    </button>
+                                    <div class="text-white text-sm">$${comic.price}</div>
+                                </div>
+                            </div>
+                            <div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">NEW</div>
+                        </div>
+                        <div class="mt-4 p-4">
+                            <h3 class="font-bold text-white text-lg mb-2 truncate">${comic.title}</h3>
+                            <p class="text-gray-400 text-sm mb-2">${comic.publisher} • ${comic.genre}</p>
+                            <p class="text-red-400 font-bold text-xl">$${comic.price}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Initialize particles background effect
+            initParticles();
+        });
+
+        // Particles background effect using p5.js
+        function initParticles() {
+            new p5(function(p) {
+                let particles = [];
+                
+                p.setup = function() {
+                    let canvas = p.createCanvas(p.windowWidth, p.windowHeight);
+                    canvas.position(0, 0);
+                    canvas.style('z-index', '-1');
+                    canvas.style('position', 'fixed');
+                    
+                    // Create particles
+                    for (let i = 0; i < 50; i++) {
+                        particles.push({
+                            x: p.random(p.width),
+                            y: p.random(p.height),
+                            vx: p.random(-0.5, 0.5),
+                            vy: p.random(-0.5, 0.5),
+                            size: p.random(2, 6)
+                        });
+                    }
+                };
+                
+                p.draw = function() {
+                    p.clear();
+                    
+                    // Update and draw particles
+                    for (let particle of particles) {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        
+                        // Wrap around edges
+                        if (particle.x < 0) particle.x = p.width;
+                        if (particle.x > p.width) particle.x = 0;
+                        if (particle.y < 0) particle.y = p.height;
+                        if (particle.y > p.height) particle.y = 0;
+                        
+                        // Draw particle
+                        p.fill(220, 38, 38, 100);
+                        p.noStroke();
+                        p.circle(particle.x, particle.y, particle.size);
+                    }
+                };
+                
+                p.windowResized = function() {
+                    p.resizeCanvas(p.windowWidth, p.windowHeight);
+                };
+            });
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Newsletter subscription
+        document.querySelector('.btn-primary').addEventListener('click', function(e) {
+            if (this.textContent === 'Subscribe Now') {
+                e.preventDefault();
+                const email = this.previousElementSibling.value;
+                if (email) {
+                    alert('Thank you for subscribing! You\'ll receive our comic updates at ' + email);
+                    this.previousElementSibling.value = '';
+                } else {
+                    alert('Please enter a valid email address.');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

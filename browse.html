@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Comics - ComicVerse Hub</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Bangers&family=Roboto:wght@300;400;500;700&family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-black: #0a0a0a;
+            --secondary-red: #dc2626;
+            --tertiary-blue: #3b82f6;
+            --warm-gold: #f59e0b;
+            --dark-gray: #1f2937;
+            --light-gray: #6b7280;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--primary-black);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .font-creepster {
+            font-family: 'Creepster', cursive;
+        }
+
+        .font-bangers {
+            font-family: 'Bangers', cursive;
+        }
+
+        .font-comic {
+            font-family: 'Comic Neue', cursive;
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--secondary-red);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary-red);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Search Bar Styles */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: white;
+            transition: all 0.3s ease;
+            width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--secondary-red);
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+            width: 300px;
+        }
+
+        .search-input::placeholder {
+            color: var(--light-gray);
+        }
+
+        /* Cart Icon Styles */
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cart-icon:hover {
+            color: var(--secondary-red);
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--secondary-red);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Filter Sidebar Styles */
+        .filter-sidebar {
+            background: var(--dark-gray);
+            border-radius: 12px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .filter-section {
+            border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+            padding: 1.5rem;
+        }
+
+        .filter-section:last-child {
+            border-bottom: none;
+        }
+
+        .filter-tag {
+            background: rgba(75, 85, 99, 0.3);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            color: var(--light-gray);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .filter-tag:hover {
+            border-color: var(--secondary-red);
+            color: var(--secondary-red);
+        }
+
+        .filter-tag.active {
+            background: var(--secondary-red);
+            color: white;
+            border-color: var(--secondary-red);
+        }
+
+        /* Sort Controls */
+        .sort-select {
+            background: var(--dark-gray);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .sort-select:focus {
+            outline: none;
+            border-color: var(--secondary-red);
+        }
+
+        /* Comic Grid Styles */
+        .comic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .comic-card {
+            background: var(--dark-gray);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(220, 38, 38, 0.1);
+            cursor: pointer;
+        }
+
+        .comic-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(220, 38, 38, 0.2);
+            border-color: var(--secondary-red);
+        }
+
+        .comic-card img {
+            transition: transform 0.3s ease;
+        }
+
+        .comic-card:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Loading States */
+        .loading-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .loading-card {
+            background: var(--dark-gray);
+            border-radius: 12px;
+            overflow: hidden;
+            height: 400px;
+            position: relative;
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-red) 0%, #b91c1c 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--secondary-red);
+            color: var(--secondary-red);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-red);
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .filter-sidebar {
+                position: static;
+                margin-bottom: 2rem;
+            }
+            
+            .comic-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+            }
+            
+            .search-input {
+                width: 200px;
+            }
+            
+            .search-input:focus {
+                width: 250px;
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Badge Styles */
+        .badge-new {
+            background: var(--secondary-red);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+        }
+
+        .badge-popular {
+            background: var(--warm-gold);
+            color: black;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center space-x-4">
+                    <a href="index.html">
+                        <h1 class="font-creepster text-3xl text-red-500">ComicVerse</h1>
+                        <span class="font-comic text-sm text-gray-400">HUB</span>
+                    </a>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link font-semibold">Home</a>
+                    <a href="browse.html" class="nav-link font-semibold text-red-500">Browse Comics</a>
+                    <a href="cart.html" class="nav-link font-semibold">Cart</a>
+                </div>
+
+                <!-- Search and Cart -->
+                <div class="flex items-center space-x-4">
+                    <div class="search-container">
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            placeholder="Search comics..." 
+                            class="search-input"
+                        >
+                    </div>
+                    <a href="cart.html" class="cart-icon text-white text-2xl relative">
+                        🛒
+                        <span id="cart-count" class="cart-count" style="display: none;">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="mt-24 px-4 pb-16">
+        <div class="container mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="font-bangers text-5xl text-white mb-4">Browse All Comics</h1>
+                <p class="text-gray-400 text-lg">Discover your next favorite comic from our extensive collection</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Filter Sidebar -->
+                <aside class="lg:w-1/4">
+                    <div class="filter-sidebar p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="font-bangers text-2xl text-white">Filters</h2>
+                            <button onclick="clearAllFilters()" class="btn-secondary text-sm">
+                                Clear All
+                            </button>
+                        </div>
+
+                        <!-- Publisher Filter -->
+                        <div class="filter-section">
+                            <h3 class="font-bold text-white mb-3">Publisher</h3>
+                            <div class="flex flex-wrap">
+                                <span class="filter-tag" data-filter="publisher-Marvel">Marvel</span>
+                                <span class="filter-tag" data-filter="publisher-DC">DC Comics</span>
+                                <span class="filter-tag" data-filter="publisher-Image">Image</span>
+                                <span class="filter-tag" data-filter="publisher-Dark Horse">Dark Horse</span>
+                                <span class="filter-tag" data-filter="publisher-IDW">IDW</span>
+                                <span class="filter-tag" data-filter="publisher-BOOM!">BOOM!</span>
+                            </div>
+                        </div>
+
+                        <!-- Genre Filter -->
+                        <div class="filter-section">
+                            <h3 class="font-bold text-white mb-3">Genre</h3>
+                            <div class="flex flex-wrap">
+                                <span class="filter-tag" data-filter="genre-Superhero">Superhero</span>
+                                <span class="filter-tag" data-filter="genre-Horror">Horror</span>
+                                <span class="filter-tag" data-filter="genre-Sci-Fi">Sci-Fi</span>
+                                <span class="filter-tag" data-filter="genre-Fantasy">Fantasy</span>
+                                <span class="filter-tag" data-filter="genre-Mystery">Mystery</span>
+                                <span class="filter-tag" data-filter="genre-Action">Action</span>
+                                <span class="filter-tag" data-filter="genre-Crime">Crime</span>
+                                <span class="filter-tag" data-filter="genre-Slice of Life">Slice of Life</span>
+                            </div>
+                        </div>
+
+                        <!-- Price Range Filter -->
+                        <div class="filter-section">
+                            <h3 class="font-bold text-white mb-3">Price Range</h3>
+                            <div class="flex flex-wrap">
+                                <span class="filter-tag" data-filter="priceRange-under-5">Under $5</span>
+                                <span class="filter-tag" data-filter="priceRange-5-10">$5 - $10</span>
+                                <span class="filter-tag" data-filter="priceRange-10-15">$10 - $15</span>
+                                <span class="filter-tag" data-filter="priceRange-over-15">Over $15</span>
+                            </div>
+                        </div>
+
+                        <!-- Release Date Filter -->
+                        <div class="filter-section">
+                            <h3 class="font-bold text-white mb-3">Release Date</h3>
+                            <div class="flex flex-wrap">
+                                <span class="filter-tag" data-filter="releaseDate-new">New Releases</span>
+                                <span class="filter-tag" data-filter="releaseDate-recent">Recent (6 months)</span>
+                                <span class="filter-tag" data-filter="releaseDate-all">All Time</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Main Content Area -->
+                <div class="lg:w-3/4">
+                    <!-- Sort and Results Info -->
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                        <div class="mb-4 md:mb-0">
+                            <p class="text-gray-400">
+                                Showing <span id="results-count">0</span> comics
+                            </p>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <label class="text-gray-400">Sort by:</label>
+                            <select id="sort-select" class="sort-select">
+                                <option value="title">Title (A-Z)</option>
+                                <option value="price-low">Price (Low to High)</option>
+                                <option value="price-high">Price (High to Low)</option>
+                                <option value="date-new">Release Date (Newest)</option>
+                                <option value="date-old">Release Date (Oldest)</option>
+                                <option value="popular">Popularity</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Comic Grid -->
+                    <div id="comic-grid" class="comic-grid">
+                        <!-- Loading state -->
+                        <div class="loading-grid">
+                            <div class="loading-card">
+                                <div class="loading-shimmer"></div>
+                            </div>
+                            <div class="loading-card">
+                                <div class="loading-shimmer"></div>
+                            </div>
+                            <div class="loading-card">
+                                <div class="loading-shimmer"></div>
+                            </div>
+                            <div class="loading-card">
+                                <div class="loading-shimmer"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Load More Button -->
+                    <div class="text-center mt-12">
+                        <button id="load-more-btn" class="btn-primary" style="display: none;">
+                            Load More Comics
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-12 px-4 border-t border-gray-800">
+        <div class="container mx-auto text-center">
+            <div class="mb-8">
+                <h3 class="font-creepster text-3xl text-red-500 mb-4">ComicVerse Hub</h3>
+                <p class="text-gray-400 max-w-2xl mx-auto">
+                    Your ultimate destination for comic books, graphic novels, and everything in between. 
+                    Discover stories that inspire, entertain, and transport you to new worlds.
+                </p>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <p class="text-gray-500">
+                    © 2024 ComicVerse Hub. All rights reserved. This is a demo website for educational purposes.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Main JavaScript -->
+    <script src="main.js"></script>
+    
+    <!-- Browse Page Specific Scripts -->
+    <script>
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let filteredComics = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const publisher = urlParams.get('publisher');
+            const genre = urlParams.get('genre');
+            const search = urlParams.get('search');
+
+            // Apply filters from URL
+            if (publisher) {
+                comicFilters.setFilter('publisher', publisher);
+                document.querySelector(`[data-filter="publisher-${publisher}"]`)?.classList.add('active');
+            }
+            
+            if (genre) {
+                comicFilters.setFilter('genre', genre);
+                document.querySelector(`[data-filter="genre-${genre}"]`)?.classList.add('active');
+            }
+            
+            if (search) {
+                comicFilters.setSearchTerm(search);
+                document.getElementById('search-input').value = search;
+            }
+
+            // Initial load
+            updateBrowseDisplay();
+        });
+
+        function updateBrowseDisplay() {
+            filteredComics = comicFilters.filterComics(comics);
+            
+            // Update results count
+            document.getElementById('results-count').textContent = filteredComics.length;
+            
+            // Show first page of results
+            showPage(1);
+            
+            // Show/hide load more button
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            if (filteredComics.length > itemsPerPage) {
+                loadMoreBtn.style.display = 'inline-block';
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
+        }
+
+        function showPage(page) {
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const comicsToShow = filteredComics.slice(0, endIndex);
+            
+            const comicGrid = document.getElementById('comic-grid');
+            
+            if (comicsToShow.length === 0) {
+                comicGrid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <h3 class="text-2xl font-bold text-white mb-4">No comics found</h3>
+                        <p class="text-gray-400 mb-6">Try adjusting your filters or search terms</p>
+                        <button onclick="clearAllFilters()" class="btn-primary">
+                            Clear All Filters
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            comicGrid.innerHTML = comicsToShow.map(comic => `
+                <div class="comic-card group cursor-pointer transform transition-all duration-300 hover:scale-105" onclick="window.location.href='comic-detail.html?id=${comic.id}'">
+                    <div class="relative overflow-hidden rounded-lg">
+                        <img src="${comic.cover}" alt="${comic.title}" class="w-full h-auto object-cover">
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex items-center justify-center">
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-center">
+                                <button onclick="event.stopPropagation(); addToCart('${comic.id}')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg mb-2 font-semibold">
+                                    Add to Cart
+                                </button>
+                                <div class="text-white text-sm">$${comic.price}</div>
+                            </div>
+                        </div>
+                        ${comic.newRelease ? '<div class="badge-new">NEW</div>' : ''}
+                        ${comic.popular ? '<div class="badge-popular">POPULAR</div>' : ''}
+                    </div>
+                    <div class="mt-4 p-4">
+                        <h3 class="font-bold text-white text-lg mb-2 truncate">${comic.title}</h3>
+                        <p class="text-gray-400 text-sm mb-2">${comic.publisher} • ${comic.genre}</p>
+                        <div class="flex items-center justify-between">
+                            <p class="text-red-400 font-bold text-xl">$${comic.price}</p>
+                            <p class="text-gray-500 text-xs">${formatDate(comic.releaseDate)}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            currentPage = page;
+            
+            // Update load more button
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            if (endIndex >= filteredComics.length) {
+                loadMoreBtn.style.display = 'none';
+            } else {
+                loadMoreBtn.style.display = 'inline-block';
+            }
+        }
+
+        // Load more functionality
+        document.getElementById('load-more-btn').addEventListener('click', function() {
+            showPage(currentPage + 1);
+        });
+
+        // Override the global updateComicDisplay function for browse page
+        window.updateComicDisplay = updateBrowseDisplay;
+
+        // Enhanced search with debouncing
+        let searchTimeout;
+        document.getElementById('search-input').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch();
+                updateBrowseDisplay();
+            }, 300);
+        });
+
+        // Sort functionality
+        document.getElementById('sort-select').addEventListener('change', function() {
+            setSort(this.value);
+            updateBrowseDisplay();
+        });
+
+        // Filter functionality with visual feedback
+        document.querySelectorAll('[data-filter]').forEach(button => {
+            button.addEventListener('click', function() {
+                const filterType = this.dataset.filter.split('-')[0];
+                const filterValue = this.dataset.filter.split('-').slice(1).join('-');
+                
+                this.classList.toggle('active');
+                toggleFilter(filterType, filterValue);
+                updateBrowseDisplay();
+            });
+        });
+
+        // Clear all filters
+        window.clearAllFilters = function() {
+            comicFilters.clearFilters();
+            
+            // Reset UI
+            document.querySelectorAll('.filter-tag.active').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            
+            document.getElementById('search-input').value = '';
+            document.getElementById('sort-select').value = 'title';
+            
+            updateBrowseDisplay();
+        };
+
+        // Add smooth scrolling to top when filters change
+        function scrollToTop() {
+            window.scrollTo({
+                top: 200,
+                behavior: 'smooth'
+            });
+        }
+
+        // Enhanced filter functions with scroll to top
+        const originalToggleFilter = window.toggleFilter;
+        window.toggleFilter = function(filterType, filterValue) {
+            originalToggleFilter(filterType, filterValue);
+            scrollToTop();
+        };
+
+        const originalSetSort = window.setSort;
+        window.setSort = function(sortType) {
+            originalSetSort(sortType);
+            scrollToTop();
+        };
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + K to focus search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('search-input').focus();
+            }
+            
+            // Escape to clear search
+            if (e.key === 'Escape') {
+                document.getElementById('search-input').value = '';
+                performSearch();
+                updateBrowseDisplay();
+            }
+        });
+    </script>
+</body>
+</html>

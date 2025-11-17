@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comic Details - ComicVerse Hub</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Bangers&family=Roboto:wght@300;400;500;700&family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-black: #0a0a0a;
+            --secondary-red: #dc2626;
+            --tertiary-blue: #3b82f6;
+            --warm-gold: #f59e0b;
+            --dark-gray: #1f2937;
+            --light-gray: #6b7280;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--primary-black);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .font-creepster {
+            font-family: 'Creepster', cursive;
+        }
+
+        .font-bangers {
+            font-family: 'Bangers', cursive;
+        }
+
+        .font-comic {
+            font-family: 'Comic Neue', cursive;
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--secondary-red);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary-red);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Search Bar Styles */
+        .search-input {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: white;
+            transition: all 0.3s ease;
+            width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--secondary-red);
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+            width: 300px;
+        }
+
+        /* Cart Icon Styles */
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cart-icon:hover {
+            color: var(--secondary-red);
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--secondary-red);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Comic Image Styles */
+        .comic-image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            background: var(--dark-gray);
+            border: 2px solid rgba(220, 38, 38, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .comic-image-container:hover {
+            border-color: var(--secondary-red);
+            box-shadow: 0 20px 40px rgba(220, 38, 38, 0.2);
+        }
+
+        .comic-image {
+            width: 100%;
+            height: auto;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .comic-image:hover {
+            transform: scale(1.05);
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-red) 0%, #b91c1c 100%);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-size: 1.125rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--secondary-red);
+            color: var(--secondary-red);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-red);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Quantity Selector */
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            background: var(--dark-gray);
+            border-radius: 8px;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            overflow: hidden;
+        }
+
+        .quantity-btn {
+            background: var(--dark-gray);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .quantity-btn:hover {
+            background: var(--secondary-red);
+        }
+
+        .quantity-input {
+            background: transparent;
+            border: none;
+            color: white;
+            text-align: center;
+            width: 60px;
+            height: 40px;
+            font-size: 1.125rem;
+            font-weight: bold;
+        }
+
+        .quantity-input:focus {
+            outline: none;
+        }
+
+        /* Comic Info Styles */
+        .info-section {
+            background: var(--dark-gray);
+            border-radius: 12px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 8px;
+        }
+
+        .info-label {
+            color: var(--light-gray);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            color: white;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        /* Related Comics Styles */
+        .related-comics {
+            background: var(--dark-gray);
+            border-radius: 12px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            padding: 2rem;
+        }
+
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .related-card {
+            background: rgba(31, 41, 55, 0.8);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(220, 38, 38, 0.1);
+        }
+
+        .related-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary-red);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.2);
+        }
+
+        .related-card img {
+            width: 100%;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .related-card:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Breadcrumb Styles */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb-item {
+            color: var(--light-gray);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb-item:hover {
+            color: var(--secondary-red);
+        }
+
+        .breadcrumb-separator {
+            color: var(--light-gray);
+        }
+
+        .breadcrumb-current {
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Loading Animation */
+        .loading-skeleton {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .comic-detail-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .related-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .search-input {
+                width: 200px;
+            }
+            
+            .search-input:focus {
+                width: 250px;
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from {
+                box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+            }
+            to {
+                box-shadow: 0 0 40px rgba(220, 38, 38, 0.6);
+            }
+        }
+
+        /* Zoom Modal */
+        .zoom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .zoom-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .zoom-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(220, 38, 38, 0.3);
+        }
+
+        .zoom-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: var(--secondary-red);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .zoom-close:hover {
+            background: #b91c1c;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center space-x-4">
+                    <a href="index.html">
+                        <h1 class="font-creepster text-3xl text-red-500">ComicVerse</h1>
+                        <span class="font-comic text-sm text-gray-400">HUB</span>
+                    </a>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link font-semibold">Home</a>
+                    <a href="browse.html" class="nav-link font-semibold">Browse Comics</a>
+                    <a href="cart.html" class="nav-link font-semibold">Cart</a>
+                </div>
+
+                <!-- Search and Cart -->
+                <div class="flex items-center space-x-4">
+                    <div class="search-container">
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            placeholder="Search comics..." 
+                            class="search-input"
+                            onkeypress="if(event.key==='Enter'){window.location.href='browse.html?search='+this.value}"
+                        >
+                    </div>
+                    <a href="cart.html" class="cart-icon text-white text-2xl relative">
+                        🛒
+                        <span id="cart-count" class="cart-count" style="display: none;">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="mt-24 px-4 pb-16">
+        <div class="container mx-auto max-w-7xl">
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="index.html" class="breadcrumb-item">Home</a>
+                <span class="breadcrumb-separator">›</span>
+                <a href="browse.html" class="breadcrumb-item">Browse Comics</a>
+                <span class="breadcrumb-separator">›</span>
+                <span id="breadcrumb-title" class="breadcrumb-current">Loading...</span>
+            </nav>
+
+            <!-- Comic Detail Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+                <!-- Comic Image -->
+                <div class="fade-in-up">
+                    <div class="comic-image-container">
+                        <img 
+                            id="comic-cover" 
+                            src="" 
+                            alt="Comic Cover" 
+                            class="comic-image"
+                            onclick="openZoomModal()"
+                        >
+                    </div>
+                    <p class="text-center text-gray-400 text-sm mt-2">Click image to zoom</p>
+                </div>
+
+                <!-- Comic Information -->
+                <div class="fade-in-up">
+                    <h1 id="comic-title" class="font-bangers text-4xl lg:text-5xl text-white mb-4">Loading...</h1>
+                    
+                    <div class="flex flex-wrap items-center gap-4 mb-6">
+                        <span id="comic-publisher" class="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Loading...</span>
+                        <span id="comic-genre" class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Loading...</span>
+                    </div>
+
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-4xl font-bold text-red-400" id="comic-price">Loading...</span>
+                            <span class="text-gray-400" id="comic-release-date">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Quantity Selector and Add to Cart -->
+                    <div class="flex flex-col sm:flex-row items-center gap-4 mb-8">
+                        <div class="quantity-selector">
+                            <button class="quantity-btn" onclick="changeQuantity(-1)">−</button>
+                            <input 
+                                type="number" 
+                                id="quantity-input" 
+                                class="quantity-input" 
+                                value="1" 
+                                min="1" 
+                                max="99"
+                                readonly
+                            >
+                            <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
+                        </div>
+                        
+                        <button 
+                            id="add-to-cart-btn" 
+                            class="btn-primary flex-1 pulse-glow"
+                            onclick="addToCartWithQuantity()"
+                        >
+                            Add to Cart
+                        </button>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="flex flex-wrap gap-3 mb-8">
+                        <button class="btn-secondary" onclick="addToWishlist()">
+                            ❤️ Add to Wishlist
+                        </button>
+                        <button class="btn-secondary" onclick="shareComic()">
+                            📤 Share
+                        </button>
+                        <button class="btn-secondary" onclick="window.print()">
+                            🖨️ Print Info
+                        </button>
+                    </div>
+
+                    <!-- Comic Description -->
+                    <div class="info-section">
+                        <h3 class="font-bangers text-2xl text-white mb-4">Synopsis</h3>
+                        <p id="comic-description" class="text-gray-300 leading-relaxed text-lg">
+                            Loading comic description...
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comic Details Grid -->
+            <div class="info-section fade-in-up mb-12">
+                <h3 class="font-bangers text-2xl text-white mb-6">Comic Details</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Publisher</div>
+                        <div id="comic-publisher-detail" class="info-value">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Genre</div>
+                        <div id="comic-genre-detail" class="info-value">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Pages</div>
+                        <div id="comic-pages" class="info-value">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Creators</div>
+                        <div id="comic-creators" class="info-value">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Release Date</div>
+                        <div id="comic-release-detail" class="info-value">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Price</div>
+                        <div id="comic-price-detail" class="info-value">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Comics -->
+            <div class="related-comics fade-in-up">
+                <h3 class="font-bangers text-2xl text-white mb-4">You Might Also Like</h3>
+                <div id="related-comics" class="related-grid">
+                    <!-- Related comics will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Zoom Modal -->
+    <div id="zoom-modal" class="zoom-modal">
+        <button class="zoom-close" onclick="closeZoomModal()">×</button>
+        <img id="zoom-image" class="zoom-image" src="" alt="Zoomed Comic Cover">
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-12 px-4 border-t border-gray-800">
+        <div class="container mx-auto text-center">
+            <div class="mb-8">
+                <h3 class="font-creepster text-3xl text-red-500 mb-4">ComicVerse Hub</h3>
+                <p class="text-gray-400 max-w-2xl mx-auto">
+                    Your ultimate destination for comic books, graphic novels, and everything in between. 
+                    Discover stories that inspire, entertain, and transport you to new worlds.
+                </p>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <p class="text-gray-500">
+                    © 2024 ComicVerse Hub. All rights reserved. This is a demo website for educational purposes.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Main JavaScript -->
+    <script src="main.js"></script>
+    
+    <!-- Comic Detail Specific Scripts -->
+    <script>
+        let currentComic = null;
+        let currentQuantity = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadComicDetail();
+        });
+
+        function loadComicDetail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const comicId = urlParams.get('id');
+            
+            if (!comicId) {
+                window.location.href = 'browse.html';
+                return;
+            }
+
+            currentComic = getComicById(comicId);
+            if (!currentComic) {
+                window.location.href = 'browse.html';
+                return;
+            }
+
+            // Populate all comic information
+            populateComicDetails(currentComic);
+            
+            // Load related comics
+            loadRelatedComics(currentComic);
+            
+            // Add entrance animations
+            addEntranceAnimations();
+        }
+
+        function populateComicDetails(comic) {
+            // Basic info
+            document.getElementById('comic-title').textContent = comic.title;
+            document.getElementById('breadcrumb-title').textContent = comic.title;
+            document.getElementById('comic-cover').src = comic.cover;
+            document.getElementById('comic-cover').alt = comic.title;
+            document.getElementById('zoom-image').src = comic.cover;
+            document.getElementById('comic-description').textContent = comic.description;
+            
+            // Price and metadata
+            document.getElementById('comic-price').textContent = `$${comic.price}`;
+            document.getElementById('comic-price-detail').textContent = `$${comic.price}`;
+            document.getElementById('comic-publisher').textContent = comic.publisher;
+            document.getElementById('comic-publisher-detail').textContent = comic.publisher;
+            document.getElementById('comic-genre').textContent = comic.genre;
+            document.getElementById('comic-genre-detail').textContent = comic.genre;
+            document.getElementById('comic-pages').textContent = `${comic.pages} pages`;
+            document.getElementById('comic-creators').textContent = comic.creators.join(', ');
+            document.getElementById('comic-release-date').textContent = formatDate(comic.releaseDate);
+            document.getElementById('comic-release-detail').textContent = formatDate(comic.releaseDate);
+        }
+
+        function loadRelatedComics(currentComic) {
+            const related = comics
+                .filter(comic => 
+                    comic.id !== currentComic.id && 
+                    (comic.genre === currentComic.genre || comic.publisher === currentComic.publisher)
+                )
+                .slice(0, 4);
+
+            const relatedContainer = document.getElementById('related-comics');
+            
+            if (related.length === 0) {
+                relatedContainer.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <p class="text-gray-400">No related comics found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            relatedContainer.innerHTML = related.map(comic => `
+                <div class="related-card" onclick="window.location.href='comic-detail.html?id=${comic.id}'">
+                    <div class="relative overflow-hidden">
+                        <img src="${comic.cover}" alt="${comic.title}" class="w-full h-auto object-cover">
+                        ${comic.newRelease ? '<div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">NEW</div>' : ''}
+                        ${comic.popular ? '<div class="absolute top-2 right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">POPULAR</div>' : ''}
+                    </div>
+                    <div class="p-3">
+                        <h4 class="font-bold text-white text-sm mb-1 truncate">${comic.title}</h4>
+                        <p class="text-gray-400 text-xs mb-2">${comic.publisher}</p>
+                        <p class="text-red-400 font-bold text-lg">$${comic.price}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function changeQuantity(delta) {
+            const quantityInput = document.getElementById('quantity-input');
+            const newQuantity = currentQuantity + delta;
+            
+            if (newQuantity >= 1 && newQuantity <= 99) {
+                currentQuantity = newQuantity;
+                quantityInput.value = currentQuantity;
+                
+                // Add animation
+                anime({
+                    targets: quantityInput,
+                    scale: [1, 1.1, 1],
+                    duration: 200,
+                    easing: 'easeInOutQuad'
+                });
+            }
+        }
+
+        function addToCartWithQuantity() {
+            if (currentComic) {
+                // Add multiple copies if quantity > 1
+                for (let i = 0; i < currentQuantity; i++) {
+                    addToCart(currentComic.id);
+                }
+                
+                // Show success animation
+                const button = document.getElementById('add-to-cart-btn');
+                const originalText = button.textContent;
+                
+                button.textContent = '✓ Added to Cart!';
+                button.style.background = '#10b981';
+                
+                anime({
+                    targets: button,
+                    scale: [1, 1.05, 1],
+                    duration: 300,
+                    easing: 'easeInOutQuad'
+                });
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                }, 2000);
+                
+                // Reset quantity
+                currentQuantity = 1;
+                document.getElementById('quantity-input').value = 1;
+            }
+        }
+
+        function addToWishlist() {
+            // Simulate adding to wishlist
+            const button = event.target;
+            const originalText = button.textContent;
+            
+            button.textContent = '✓ Added to Wishlist!';
+            button.style.background = '#3b82f6';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '';
+            }, 2000);
+        }
+
+        function shareComic() {
+            if (navigator.share && currentComic) {
+                navigator.share({
+                    title: currentComic.title,
+                    text: `Check out ${currentComic.title} from ComicVerse Hub!`,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('Link copied to clipboard!');
+                });
+            }
+        }
+
+        function openZoomModal() {
+            const modal = document.getElementById('zoom-modal');
+            modal.classList.add('active');
+            
+            anime({
+                targets: modal,
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeInOutQuad'
+            });
+        }
+
+        function closeZoomModal() {
+            const modal = document.getElementById('zoom-modal');
+            
+            anime({
+                targets: modal,
+                opacity: [1, 0],
+                duration: 300,
+                easing: 'easeInOutQuad',
+                complete: () => {
+                    modal.classList.remove('active');
+                }
+            });
+        }
+
+        function addEntranceAnimations() {
+            // Animate elements on page load
+            anime({
+                targets: '.fade-in-up',
+                opacity: [0, 1],
+                translateY: [30, 0],
+                duration: 800,
+                delay: anime.stagger(200),
+                easing: 'easeOutQuad'
+            });
+            
+            // Animate comic image
+            anime({
+                targets: '.comic-image-container',
+                scale: [0.9, 1],
+                opacity: [0, 1],
+                duration: 600,
+                delay: 400,
+                easing: 'easeOutBack'
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape to close zoom modal
+            if (e.key === 'Escape') {
+                closeZoomModal();
+            }
+            
+            // + and - keys for quantity
+            if (e.key === '+' || e.key === '=') {
+                e.preventDefault();
+                changeQuantity(1);
+            } else if (e.key === '-') {
+                e.preventDefault();
+                changeQuantity(-1);
+            }
+            
+            // Enter key to add to cart
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                addToCartWithQuantity();
+            }
+        });
+
+        // Close zoom modal on background click
+        document.getElementById('zoom-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeZoomModal();
+            }
+        });
+
+        // Quantity input change handler
+        document.getElementById('quantity-input').addEventListener('change', function() {
+            const value = parseInt(this.value);
+            if (value >= 1 && value <= 99) {
+                currentQuantity = value;
+            } else {
+                this.value = currentQuantity;
+            }
+        });
+
+        // Add loading states
+        function showLoading() {
+            document.getElementById('comic-title').innerHTML = '<div class="loading-skeleton h-12 w-3/4"></div>';
+            document.getElementById('comic-description').innerHTML = '<div class="loading-skeleton h-4 w-full mb-2"></div><div class="loading-skeleton h-4 w-5/6"></div>';
+        }
+
+        // Auto-hide navbar on scroll down, show on scroll up
+        let lastScrollTop = 0;
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                // Scrolling down
+                navbar.style.transform = 'translateY(-100%)';
+            } else {
+                // Scrolling up
+                navbar.style.transform = 'translateY(0)';
+            }
+            
+            lastScrollTop = scrollTop;
+        });
+    </script>
+</body>
+</html>

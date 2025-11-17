@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - ComicVerse Hub</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Bangers&family=Roboto:wght@300;400;500;700&family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-black: #0a0a0a;
+            --secondary-red: #dc2626;
+            --tertiary-blue: #3b82f6;
+            --warm-gold: #f59e0b;
+            --dark-gray: #1f2937;
+            --light-gray: #6b7280;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--primary-black);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .font-creepster {
+            font-family: 'Creepster', cursive;
+        }
+
+        .font-bangers {
+            font-family: 'Bangers', cursive;
+        }
+
+        .font-comic {
+            font-family: 'Comic Neue', cursive;
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--secondary-red);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary-red);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Search Bar Styles */
+        .search-input {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: white;
+            transition: all 0.3s ease;
+            width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--secondary-red);
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+            width: 300px;
+        }
+
+        /* Cart Icon Styles */
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cart-icon:hover {
+            color: var(--secondary-red);
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--secondary-red);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Cart Item Styles */
+        .cart-item {
+            background: var(--dark-gray);
+            border-radius: 12px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cart-item:hover {
+            border-color: var(--secondary-red);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.1);
+        }
+
+        .cart-item-image {
+            width: 80px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .cart-item-title {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .cart-item-details {
+            color: var(--light-gray);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .cart-item-price {
+            font-weight: 700;
+            color: var(--secondary-red);
+            font-size: 1.25rem;
+        }
+
+        /* Quantity Controls */
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            background: rgba(31, 41, 55, 0.8);
+            border-radius: 8px;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            overflow: hidden;
+        }
+
+        .quantity-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.125rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn:hover {
+            background: var(--secondary-red);
+        }
+
+        .quantity-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quantity-btn:disabled:hover {
+            background: transparent;
+        }
+
+        .quantity-display {
+            background: transparent;
+            border: none;
+            color: white;
+            text-align: center;
+            width: 50px;
+            height: 36px;
+            font-size: 1rem;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        /* Remove Button */
+        .remove-btn {
+            background: transparent;
+            border: 2px solid var(--secondary-red);
+            color: var(--secondary-red);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .remove-btn:hover {
+            background: var(--secondary-red);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Order Summary Styles */
+        .order-summary {
+            background: var(--dark-gray);
+            border-radius: 12px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            padding: 2rem;
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--secondary-red);
+            padding-top: 1rem;
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-red) 0%, #b91c1c 100%);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-size: 1.125rem;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--secondary-red);
+            color: var(--secondary-red);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-red);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Empty Cart Styles */
+        .empty-cart {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--dark-gray);
+            border-radius: 12px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .empty-cart-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Loading Animation */
+        .loading-skeleton {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Success Animation */
+        .success-animation {
+            animation: successPulse 0.6s ease-in-out;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .cart-layout {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .order-summary {
+                position: static;
+                order: -1;
+            }
+            
+            .cart-item-content {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 1rem;
+            }
+            
+            .cart-item-actions {
+                width: 100%;
+                justify-content: space-between !important;
+            }
+            
+            .search-input {
+                width: 200px;
+            }
+            
+            .search-input:focus {
+                width: 250px;
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cart Item Animation */
+        .cart-item-enter {
+            animation: cartItemEnter 0.5s ease-out;
+        }
+
+        @keyframes cartItemEnter {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .cart-item-exit {
+            animation: cartItemExit 0.3s ease-in;
+        }
+
+        @keyframes cartItemExit {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center space-x-4">
+                    <a href="index.html">
+                        <h1 class="font-creepster text-3xl text-red-500">ComicVerse</h1>
+                        <span class="font-comic text-sm text-gray-400">HUB</span>
+                    </a>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link font-semibold">Home</a>
+                    <a href="browse.html" class="nav-link font-semibold">Browse Comics</a>
+                    <a href="cart.html" class="nav-link font-semibold text-red-500">Cart</a>
+                </div>
+
+                <!-- Search and Cart -->
+                <div class="flex items-center space-x-4">
+                    <div class="search-container">
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            placeholder="Search comics..." 
+                            class="search-input"
+                            onkeypress="if(event.key==='Enter'){window.location.href='browse.html?search='+this.value}"
+                        >
+                    </div>
+                    <div class="cart-icon text-white text-2xl relative">
+                        🛒
+                        <span id="cart-count" class="cart-count" style="display: none;">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="mt-24 px-4 pb-16">
+        <div class="container mx-auto max-w-6xl">
+            <!-- Header -->
+            <div class="text-center mb-12 fade-in-up">
+                <h1 class="font-bangers text-5xl text-white mb-4">🛒 Your Shopping Cart</h1>
+                <p class="text-gray-400 text-lg">Review your comic selections and proceed to checkout</p>
+            </div>
+
+            <!-- Cart Content -->
+            <div class="cart-layout grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Cart Items -->
+                <div class="lg:col-span-2">
+                    <div id="cart-items" class="space-y-4">
+                        <!-- Cart items will be dynamically loaded here -->
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="lg:col-span-1">
+                    <div id="cart-summary" class="order-summary fade-in-up">
+                        <!-- Order summary will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Comics -->
+            <div id="recommendations" class="mt-16 fade-in-up" style="display: none;">
+                <h2 class="font-bangers text-3xl text-white mb-8 text-center">You Might Also Like</h2>
+                <div id="recommended-comics" class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <!-- Recommended comics will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Checkout Success Modal -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 opacity-0 invisible transition-all duration-300">
+        <div class="bg-gray-800 rounded-lg p-8 max-w-md mx-4 text-center border border-red-500">
+            <div class="text-6xl mb-4">🎉</div>
+            <h3 class="font-bangers text-2xl text-white mb-4">Order Placed Successfully!</h3>
+            <p class="text-gray-400 mb-6">Thank you for your simulated order! This is a demo checkout process.</p>
+            <div class="space-y-3">
+                <button onclick="closeCheckoutModal()" class="btn-primary">
+                    Continue Shopping
+                </button>
+                <button onclick="clearCart()" class="btn-secondary">
+                    Clear Cart
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-12 px-4 border-t border-gray-800">
+        <div class="container mx-auto text-center">
+            <div class="mb-8">
+                <h3 class="font-creepster text-3xl text-red-500 mb-4">ComicVerse Hub</h3>
+                <p class="text-gray-400 max-w-2xl mx-auto">
+                    Your ultimate destination for comic books, graphic novels, and everything in between. 
+                    Discover stories that inspire, entertain, and transport you to new worlds.
+                </p>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <p class="text-gray-500">
+                    © 2024 ComicVerse Hub. All rights reserved. This is a demo website for educational purposes.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Main JavaScript -->
+    <script src="main.js"></script>
+    
+    <!-- Cart Page Specific Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCartDisplay();
+            loadRecommendations();
+            addEntranceAnimations();
+        });
+
+        function loadCartDisplay() {
+            const cartItems = document.getElementById('cart-items');
+            const cartSummary = document.getElementById('cart-summary');
+            
+            if (!cartItems || !cartSummary) return;
+
+            const items = comicCart.items;
+            
+            if (items.length === 0) {
+                showEmptyCart();
+                return;
+            }
+
+            // Show cart items
+            showCartItems(items);
+            showOrderSummary(items);
+        }
+
+        function showEmptyCart() {
+            const cartItems = document.getElementById('cart-items');
+            const cartSummary = document.getElementById('cart-summary');
+            
+            cartItems.innerHTML = `
+                <div class="empty-cart">
+                    <div class="empty-cart-icon">📚</div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Your cart is empty</h3>
+                    <p class="text-gray-400 mb-8">Looks like you haven't added any comics to your cart yet. Let's fix that!</p>
+                    <div class="space-y-4">
+                        <a href="browse.html" class="btn-primary inline-block">
+                            Browse Comics
+                        </a>
+                        <div>
+                            <a href="index.html" class="text-red-400 hover:text-red-300 transition-colors">
+                                ← Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            cartSummary.innerHTML = `
+                <div class="text-center py-8">
+                    <h3 class="font-bangers text-xl text-white mb-4">Order Summary</h3>
+                    <p class="text-gray-400">Add items to see your order summary</p>
+                </div>
+            `;
+        }
+
+        function showCartItems(items) {
+            const cartItems = document.getElementById('cart-items');
+            
+            cartItems.innerHTML = items.map(item => {
+                const comic = getComicById(item.id);
+                return `
+                    <div class="cart-item cart-item-enter p-4" data-item-id="${item.id}">
+                        <div class="cart-item-content flex items-center space-x-4">
+                            <img src="${comic.cover}" alt="${comic.title}" class="cart-item-image">
+                            
+                            <div class="flex-1 min-w-0">
+                                <h3 class="cart-item-title truncate">${comic.title}</h3>
+                                <p class="cart-item-details">${comic.publisher} • ${comic.genre}</p>
+                                <p class="cart-item-price">$${comic.price}</p>
+                            </div>
+                            
+                            <div class="cart-item-actions flex items-center space-x-4">
+                                <div class="quantity-controls">
+                                    <button 
+                                        class="quantity-btn" 
+                                        onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})"
+                                        ${item.quantity <= 1 ? 'disabled' : ''}
+                                    >−</button>
+                                    <input type="text" class="quantity-display" value="${item.quantity}" readonly>
+                                    <button 
+                                        class="quantity-btn" 
+                                        onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})"
+                                        ${item.quantity >= 99 ? 'disabled' : ''}
+                                    >+</button>
+                                </div>
+                                
+                                <div class="text-right">
+                                    <div class="text-white font-bold text-lg">$${(comic.price * item.quantity).toFixed(2)}</div>
+                                    <button 
+                                        class="remove-btn mt-2" 
+                                        onclick="removeFromCart('${item.id}')"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showOrderSummary(items) {
+            const cartSummary = document.getElementById('cart-summary');
+            
+            const subtotal = comicCart.getTotal();
+            const tax = subtotal * 0.08; // 8% tax
+            const shipping = subtotal > 50 ? 0 : 5.99; // Free shipping over $50
+            const total = subtotal + tax + shipping;
+            
+            const itemCount = comicCart.getItemCount();
+            
+            cartSummary.innerHTML = `
+                <h3 class="font-bangers text-2xl text-white mb-6">Order Summary</h3>
+                
+                <div class="summary-row">
+                    <span class="text-gray-300">Subtotal (${itemCount} items)</span>
+                    <span class="text-white font-semibold">$${subtotal.toFixed(2)}</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span class="text-gray-300">Tax</span>
+                    <span class="text-white font-semibold">$${tax.toFixed(2)}</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span class="text-gray-300">Shipping</span>
+                    <span class="text-white font-semibold">
+                        ${shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                    </span>
+                </div>
+                
+                <div class="summary-row">
+                    <span class="text-white font-bold text-lg">Total</span>
+                    <span class="text-red-400 font-bold text-xl">$${total.toFixed(2)}</span>
+                </div>
+                
+                ${subtotal <= 50 ? `
+                    <div class="mt-4 p-3 bg-blue-600 bg-opacity-20 border border-blue-500 rounded-lg">
+                        <p class="text-blue-400 text-sm">
+                            Add $${(50 - subtotal).toFixed(2)} more for FREE shipping!
+                        </p>
+                    </div>
+                ` : ''}
+                
+                <div class="mt-6 space-y-3">
+                    <button 
+                        id="checkout-btn" 
+                        class="btn-primary"
+                        onclick="proceedToCheckout()"
+                    >
+                        Proceed to Checkout
+                    </button>
+                    
+                    <button 
+                        class="btn-secondary"
+                        onclick="clearCart()"
+                    >
+                        Clear Cart
+                    </button>
+                    
+                    <a href="browse.html" class="btn-secondary block text-center">
+                        Continue Shopping
+                    </a>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-gray-600">
+                    <h4 class="font-semibold text-white mb-3">Payment Methods</h4>
+                    <div class="flex items-center space-x-4 text-sm text-gray-400">
+                        <span>💳 Credit Card</span>
+                        <span>📱 PayPal</span>
+                        <span>🅿️ Apple Pay</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadRecommendations() {
+            const items = comicCart.items;
+            if (items.length === 0) return;
+
+            // Get recommendations based on cart items
+            const cartGenres = items.map(item => getComicById(item.id).genre);
+            const cartPublishers = items.map(item => getComicById(item.id).publisher);
+            
+            const recommendations = comics
+                .filter(comic => 
+                    !items.some(item => item.id === comic.id) &&
+                    (cartGenres.includes(comic.genre) || cartPublishers.includes(comic.publisher))
+                )
+                .slice(0, 4);
+
+            if (recommendations.length > 0) {
+                document.getElementById('recommendations').style.display = 'block';
+                const recommendedContainer = document.getElementById('recommended-comics');
+                
+                recommendedContainer.innerHTML = recommendations.map(comic => `
+                    <div class="bg-gray-800 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border border-gray-700 hover:border-red-500" onclick="window.location.href='comic-detail.html?id=${comic.id}'">
+                        <div class="relative">
+                            <img src="${comic.cover}" alt="${comic.title}" class="w-full h-auto object-cover">
+                            ${comic.newRelease ? '<div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">NEW</div>' : ''}
+                            ${comic.popular ? '<div class="absolute top-2 right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">POPULAR</div>' : ''}
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-bold text-white text-sm mb-1 truncate">${comic.title}</h4>
+                            <p class="text-gray-400 text-xs mb-2">${comic.publisher}</p>
+                            <div class="flex items-center justify-between">
+                                <p class="text-red-400 font-bold text-lg">$${comic.price}</p>
+                                <button 
+                                    onclick="event.stopPropagation(); addToCart('${comic.id}')" 
+                                    class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs font-semibold transition-colors"
+                                >
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function proceedToCheckout() {
+            const items = comicCart.items;
+            if (items.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+
+            // Simulate checkout process
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const originalText = checkoutBtn.textContent;
+            
+            checkoutBtn.textContent = 'Processing...';
+            checkoutBtn.disabled = true;
+            
+            setTimeout(() => {
+                showCheckoutModal();
+                checkoutBtn.textContent = originalText;
+                checkoutBtn.disabled = false;
+            }, 2000);
+        }
+
+        function showCheckoutModal() {
+            const modal = document.getElementById('checkout-modal');
+            modal.classList.remove('opacity-0', 'invisible');
+            modal.classList.add('opacity-100', 'visible');
+            
+            anime({
+                targets: modal.querySelector('.bg-gray-800'),
+                scale: [0.8, 1],
+                opacity: [0, 1],
+                duration: 500,
+                easing: 'easeOutBack'
+            });
+        }
+
+        function closeCheckoutModal() {
+            const modal = document.getElementById('checkout-modal');
+            
+            anime({
+                targets: modal.querySelector('.bg-gray-800'),
+                scale: [1, 0.8],
+                opacity: [1, 0],
+                duration: 300,
+                easing: 'easeInBack',
+                complete: () => {
+                    modal.classList.add('opacity-0', 'invisible');
+                    modal.classList.remove('opacity-100', 'visible');
+                }
+            });
+        }
+
+        function clearCart() {
+            if (confirm('Are you sure you want to clear your cart?')) {
+                comicCart.clearCart();
+                loadCartDisplay();
+                document.getElementById('recommendations').style.display = 'none';
+                
+                // Show success message
+                showNotification('Cart cleared successfully!', 'success');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-600' : 
+                type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+            } text-white`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function addEntranceAnimations() {
+            // Animate elements on page load
+            anime({
+                targets: '.fade-in-up',
+                opacity: [0, 1],
+                translateY: [30, 0],
+                duration: 800,
+                delay: anime.stagger(200),
+                easing: 'easeOutQuad'
+            });
+            
+            // Animate cart items
+            anime({
+                targets: '.cart-item',
+                opacity: [0, 1],
+                translateX: [-30, 0],
+                duration: 600,
+                delay: anime.stagger(100, {start: 400}),
+                easing: 'easeOutQuad'
+            });
+        }
+
+        // Override global functions for cart page
+        window.updateCartQuantity = function(comicId, quantity) {
+            const originalUpdate = comicCart.updateQuantity.bind(comicCart);
+            originalUpdate(comicId, quantity);
+            
+            // Add animation to updated item
+            const itemElement = document.querySelector(`[data-item-id="${comicId}"]`);
+            if (itemElement) {
+                itemElement.classList.add('success-animation');
+                setTimeout(() => {
+                    itemElement.classList.remove('success-animation');
+                }, 600);
+            }
+            
+            // Reload display
+            setTimeout(() => {
+                loadCartDisplay();
+                loadRecommendations();
+            }, 100);
+        };
+
+        window.removeFromCart = function(comicId) {
+            const itemElement = document.querySelector(`[data-item-id="${comicId}"]`);
+            if (itemElement) {
+                itemElement.classList.add('cart-item-exit');
+                
+                setTimeout(() => {
+                    const originalRemove = comicCart.removeItem.bind(comicCart);
+                    originalRemove(comicId);
+                    loadCartDisplay();
+                    loadRecommendations();
+                }, 300);
+            }
+        };
+
+        window.clearCart = clearCart;
+        window.proceedToCheckout = proceedToCheckout;
+        window.closeCheckoutModal = closeCheckoutModal;
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + Shift + C to clear cart
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                clearCart();
+            }
+            
+            // Ctrl/Cmd + Enter to checkout
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                proceedToCheckout();
+            }
+        });
+
+        // Auto-hide navbar on scroll down, show on scroll up
+        let lastScrollTop = 0;
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                // Scrolling down
+                navbar.style.transform = 'translateY(-100%)';
+            } else {
+                // Scrolling up
+                navbar.style.transform = 'translateY(0)';
+            }
+            
+            lastScrollTop = scrollTop;
+        });
+    </script>
+</body>
+</html>
